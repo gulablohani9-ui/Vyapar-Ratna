@@ -1,28 +1,71 @@
+package com.vyaparratna
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            VyaparRatnaTheme {
-                val navController = rememberNavController()
-                NavGraph(navController = navController)
+            MaterialTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    HomeScreen()
+                }
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NavGraph(navController: NavHostController) {
-    NavHost(
-        navController = navController,
-        startDestination = "home"
-    ) {
-        composable("home") { HomeScreen(navController) }
-        composable("transit") { TransitScreen(navController) }
-        composable("chakra") { SarvatobhadraScreen(navController) }
-        composable("analysis") { AnalysisScreen(navController) }
-        composable("dhruvank") { DhruvankScreen(navController) }
-        composable("panchang") { PanchangScreen(navController) }
-        composable("vedha") { VedhaScreen(navController) }
-        composable("tools") { ToolsScreen(navController) }
+fun HomeScreen() {
+    val menuItems = listOf(
+        "🪐 ग्रह गोचर (Transit)",
+        "🔮 सर्वतोभद्रचक्र",
+        "📊 तेजी-मंदी विश्लेषण",
+        "📖 ध्रुवांक सारिणी",
+        "📅 पंचांग",
+        "🎯 वेध-पद्धति",
+        "🧮 Calculation Tools"
+    )
+    
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("व्यापार रत्न") }
+            )
+        }
+    ) { padding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(menuItems) { item ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = { /* Navigate later */ }
+                ) {
+                    Text(
+                        text = item,
+                        modifier = Modifier.padding(20.dp),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+            }
+        }
     }
 }
