@@ -32,7 +32,7 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavHostController) {  // 👈 YAHAN CHANGE HAI
+fun HomeScreen(navController: NavHostController) {
     val menuItems = listOf(
         "🪐 ग्रह गोचर (Transit)" to "transit",
         "🔮 सर्वतोभद्रचक्र" to "chakra",
@@ -42,7 +42,7 @@ fun HomeScreen(navController: NavHostController) {  // 👈 YAHAN CHANGE HAI
         "🎯 वेध-पद्धति" to "vedha",
         "🧮 Calculation Tools" to "tools"
     )
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -61,8 +61,9 @@ fun HomeScreen(navController: NavHostController) {  // 👈 YAHAN CHANGE HAI
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = {
-                        if (route == "dhruvank") {
-                            navController.navigate("dhruvank")
+                        when (route) {
+                            "dhruvank" -> navController.navigate("dhruvank")
+                            "analysis" -> navController.navigate("analysis")
                         }
                     }
                 ) {
