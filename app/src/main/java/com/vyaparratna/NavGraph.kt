@@ -12,8 +12,13 @@ fun NavGraph(navController: NavHostController) {
         startDestination = "home"
     ) {
         composable("home") { HomeScreen(navController) }
-        composable("dhruvank") { DhruvankScreen(navController) }
         composable("analysis") { MarketScreen(navController) }
+        composable("dhruvank") { DhruvankScreen(navController) }
         composable("history") { HistoryScreen(navController) }
+        composable("chakra") { SarvatobhadraScreen(navController) }
+        composable("transit") { TransitScreen(navController) }
+        composable("panchang") { PanchangScreen(navController) }
+        composable("vedha") { VedhaScreen(navController) }
+        composable("tools") { ToolsScreen(navController) }
     }
 }
