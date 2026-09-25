@@ -35,7 +35,12 @@ class MainActivity : ComponentActivity() {
 fun HomeScreen(navController: NavHostController) {
     val menuItems = listOf(
         "📊 तेजी-मंदी विश्लेषण" to "analysis",
+        "🔮 सर्वतोभद्रचक्र" to "chakra",
+        "🪐 ग्रह गोचर (Transit)" to "transit",
+        "📅 पंचांग" to "panchang",
+        "🎯 वेध-पद्धति" to "vedha",
         "📖 ध्रुवांक सारिणी" to "dhruvank",
+        "🧮 Calculation Tools" to "tools",
         "🕐 पूर्वानुमान इतिहास" to "history"
     )
 
@@ -56,9 +61,7 @@ fun HomeScreen(navController: NavHostController) {
             items(menuItems) { (item, route) ->
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    onClick = {
-                        navController.navigate(route)
-                    }
+                    onClick = { navController.navigate(route) }
                 ) {
                     Text(
                         text = item,
