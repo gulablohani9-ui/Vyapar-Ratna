@@ -1,5 +1,6 @@
 package com.vyaparratna
 
+import android.app.DatePickerDialog
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -14,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import java.util.Calendar
 import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -33,15 +35,31 @@ fun MarketScreen(navController: NavHostController) {
 
     var resultText by remember { mutableStateOf("") }
     var predictedPrice by remember { mutableStateOf("") }
+    var shareText by remember { mutableStateOf("") }
     var isTeji by remember { mutableStateOf(false) }
     var showResult by remember { mutableStateOf(false) }
 
-    // Auto-update nakshatra/tithi/vaar when date changes
     fun updatePanchang(newDate: Date) {
         selectedDate = newDate
         selectedVaar = PanchangHelper.getVaarFromDate(newDate)
         selectedNakshatra = PanchangHelper.getApproxNakshatra(newDate)
         selectedTithi = PanchangHelper.getApproxTithi(newDate)
+    }
+
+    fun openDatePicker() {
+        val cal = Calendar.getInstance()
+        cal.time = selectedDate
+        DatePickerDialog(
+            context,
+            { _, year, month, day ->
+                val c = Calendar.getInstance()
+                c.set(year, month, day)
+                updatePanchang(c.time)
+            },
+            cal.get(Calendar.YEAR),
+            cal.get(Calendar.MONTH),
+            cal.get(Calendar.DAY_OF_MONTH)
+        ).show()
     }
 
     Scaffold(
@@ -84,16 +102,36 @@ fun MarketScreen(navController: NavHostController) {
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Button(onClick = { updatePanchang(PanchangHelper.today()) }) {
-                            Text("आज", style = MaterialTheme.typography.bodyMedium)
+                        Button(
+                            onClick = { updatePanchang(PanchangHelper.today()) },
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp)
+                        ) {
+                            Text("आज", style = MaterialTheme.typography.bodySmall)
                         }
-                        Button(onClick = { updatePanchang(PanchangHelper.tomorrow()) }) {
-                            Text("कल", style = MaterialTheme.typography.bodyMedium)
+                        Button(
+                            onClick = { updatePanchang(PanchangHelper.tomorrow()) },
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp)
+                        ) {
+                            Text("कल", style = MaterialTheme.typography.bodySmall)
                         }
-                        Button(onClick = { updatePanchang(PanchangHelper.dayAfterTomorrow()) }) {
-                            Text("परसों", style = MaterialTheme.typography.bodyMedium)
+                        Button(
+                            onClick = { updatePanchang(PanchangHelper.dayAfterTomorrow()) },
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp)
+                        ) {
+                            Text("परसों", style = MaterialTheme.typography.bodySmall)
+                        }
+                        OutlinedButton(
+                            onClick = { openDatePicker() },
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp)
+                        ) {
+                            Text("📅", style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }
@@ -205,6 +243,23 @@ fun MarketScreen(navController: NavHostController) {
                                 "कुल योग: $total\n" +
                                 "शेष (÷8): $remainder"
 
+                        // Share text (formatted for WhatsApp etc.)
+                        shareText = "🔮 व्यापार रत्न पूर्वानुमान\n" +
+                                "━━━━━━━━━━━━━━━\n" +
+                                "📅 ${PanchangHelper.formatDateHindi(selectedDate)}\n" +
+                                "🎯 ${selectedMarket}\n\n" +
+                                "📊 स्थिति:\n" +
+                                "वार: $selectedVaar\n" +
+                                "नक्षत्र: $selectedNakshatra\n" +
+                                "तिथि: $selectedTithi\n" +
+                                "राशि: $selectedRashi\n" +
+                                "शहर: $selectedCity\n\n" +
+                                "💰 मूल्य: ₹$priceInput\n" +
+                                "📈 अगर ${if (isTeji) "तेजी" else "मंदी"}: ₹%.2f\n\n".format(predicted) +
+                                "🎯 अनुमान: ${if (isTeji) "📈 तेजी" else "📉 मंदी"}\n\n" +
+                                "━━━━━━━━━━━━━━━\n" +
+                                "व्यापार रत्न App से"
+
                         PredictionStore.save(
                             context = context,
                             market = selectedMarket,
@@ -266,6 +321,20 @@ fun MarketScreen(navController: NavHostController) {
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Share Button
+                        OutlinedButton(
+                            onClick = {
+                                if (shareText.isNotEmpty()) {
+                                    ShareHelper.shareText(context, shareText)
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("📤 शेयर करें (WhatsApp/FB)")
                         }
                     }
                 }
