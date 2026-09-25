@@ -2,10 +2,13 @@ package com.vyaparratna
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 
@@ -14,7 +17,9 @@ import androidx.navigation.NavHostController
 fun MarketScreen(navController: NavHostController) {
     var selectedMarket by remember { mutableStateOf("Gold") }
     var selectedVaar by remember { mutableStateOf("रविवार") }
+    var priceInput by remember { mutableStateOf("") }
     var resultText by remember { mutableStateOf("") }
+    var predictedPrice by remember { mutableStateOf("") }
     var isTeji by remember { mutableStateOf(false) }
     var showResult by remember { mutableStateOf(false) }
 
@@ -35,10 +40,10 @@ fun MarketScreen(navController: NavHostController) {
         ) {
             Text(
                 "📊 बाजार चुनें",
-                style = MaterialTheme.typography.titleLarge
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
             )
 
-            // 4 Market Buttons
             MarketData.marketDhruvank.keys.forEach { market ->
                 Button(
                     onClick = { selectedMarket = market },
@@ -59,10 +64,10 @@ fun MarketScreen(navController: NavHostController) {
 
             Text(
                 "📅 वार चुनें",
-                style = MaterialTheme.typography.titleLarge
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
             )
 
-            // Vaar Buttons
             DhruvankData.vaarDhruvank.keys.forEach { vaar ->
                 Button(
                     onClick = { selectedVaar = vaar },
@@ -78,9 +83,25 @@ fun MarketScreen(navController: NavHostController) {
                 }
             }
 
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                "💰 आज का भाव (Price)",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+
+            OutlinedTextField(
+                value = priceInput,
+                onValueChange = { priceInput = it },
+                label = { Text("जैसे: 75000") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Calculate Button
             Button(
                 onClick = {
                     try {
@@ -89,13 +110,23 @@ fun MarketScreen(navController: NavHostController) {
                         val total = marketVal + vaarVal
                         val remainder = total % 8
 
-                        val prediction: String
-                        if (remainder % 2 == 0) {
-                            isTeji = true
-                            prediction = "📈 तेजी (Teji)"
+                        // Teji ya Mandi
+                        isTeji = remainder % 2 == 0
+
+                        // Price calculation
+                        val price = priceInput.toDoubleOrNull() ?: 0.0
+                        val changePercent = when {
+                            isTeji -> 1.0 + (remainder * 0.5)  // 0.5% to 4%
+                            else -> 1.0 - (remainder * 0.5)    // -0.5% to -4%
+                        }
+                        val predicted = price * changePercent
+                        val change = predicted - price
+
+                        predictedPrice = if (price > 0) {
+                            "अनुमानित भाव: ₹%.2f\n".format(predicted) +
+                            "बदलाव: ₹%.2f (%.2f%%)".format(change, (change / price) * 100)
                         } else {
-                            isTeji = false
-                            prediction = "📉 मंदी (Mandi)"
+                            "कृपया पहले मूल्य डालें"
                         }
 
                         resultText = "📊 विश्लेषण:\n\n" +
@@ -104,14 +135,14 @@ fun MarketScreen(navController: NavHostController) {
                                 "वार: $selectedVaar\n" +
                                 "ध्रुवांक: $vaarVal\n\n" +
                                 "कुल योग: $total\n" +
-                                "शेष (÷8): $remainder\n\n" +
-                                "अनुमान: $prediction"
+                                "शेष (÷8): $remainder\n"
 
                         showResult = true
                     } catch (e: Throwable) {
                         resultText = "त्रुटि: ${e.message}"
                         showResult = true
                         isTeji = false
+                        predictedPrice = ""
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
@@ -122,10 +153,15 @@ fun MarketScreen(navController: NavHostController) {
                 )
             }
 
-            // Result Card
             if (showResult) {
                 Card(
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (isTeji)
+                            MaterialTheme.colorScheme.primaryContainer
+                        else
+                            MaterialTheme.colorScheme.errorContainer
+                    )
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
@@ -134,16 +170,26 @@ fun MarketScreen(navController: NavHostController) {
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = if (isTeji) "📈 तेजी" else "📉 मंदी",
-                            style = MaterialTheme.typography.headlineMedium
+                            text = if (isTeji) "📈 तेजी (Teji)" else "📉 मंदी (Mandi)",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold
                         )
+                        if (predictedPrice.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Divider()
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text = predictedPrice,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Back Button
             Button(
                 onClick = { navController.popBackStack() },
                 modifier = Modifier.fillMaxWidth()
