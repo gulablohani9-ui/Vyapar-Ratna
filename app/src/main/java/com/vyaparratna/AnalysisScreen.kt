@@ -8,6 +8,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 
@@ -18,8 +19,11 @@ fun AnalysisScreen(navController: NavHostController) {
     var selectedNakshatra by remember { mutableStateOf("अश्विनी") }
     var selectedTithi by remember { mutableStateOf("प्रतिपदा") }
     var selectedVaar by remember { mutableStateOf("रविवार") }
+    var selectedRashi by remember { mutableStateOf("मेष") }
     var selectedCity by remember { mutableStateOf("दिल्ली") }
     var resultText by remember { mutableStateOf("") }
+    var isTeji by remember { mutableStateOf(false) }
+    var hasResult by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -27,7 +31,10 @@ fun AnalysisScreen(navController: NavHostController) {
                 title = { Text("तेजी-मंदी विश्लेषण") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
                     }
                 }
             )
@@ -41,41 +48,114 @@ fun AnalysisScreen(navController: NavHostController) {
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Dropdowns for selections
-            DropdownSelector("वस्तु चुनें", DhruvankData.commodityDhruvank.keys.toList()) { selectedCommodity = it }
-            DropdownSelector("नक्षत्र चुनें", DhruvankData.nakshatraDhruvank.keys.toList()) { selectedNakshatra = it }
-            DropdownSelector("तिथि चुनें", DhruvankData.tithiDhruvank.keys.toList()) { selectedTithi = it }
-            DropdownSelector("वार चुनें", DhruvankData.vaarDhruvank.keys.toList()) { selectedVaar = it }
-            DropdownSelector("शहर चुनें", DhruvankData.cityDhruvank.keys.toList()) { selectedCity = it }
+            Text(
+                "विवरण भरें",
+                style = MaterialTheme.typography.titleLarge
+            )
+
+            DropdownSelector(
+                label = "वस्तु चुनें",
+                items = DhruvankData.commodityDhruvank.keys.toList()
+            ) { selectedCommodity = it }
+
+            DropdownSelector(
+                label = "नक्षत्र चुनें",
+                items = DhruvankData.nakshatraDhruvank.keys.toList()
+            ) { selectedNakshatra = it }
+
+            DropdownSelector(
+                label = "तिथि चुनें",
+                items = DhruvankData.tithiDhruvank.keys.toList()
+            ) { selectedTithi = it }
+
+            DropdownSelector(
+                label = "वार चुनें",
+                items = DhruvankData.vaarDhruvank.keys.toList()
+            ) { selectedVaar = it }
+
+            DropdownSelector(
+                label = "राशि चुनें",
+                items = DhruvankData.rashiDhruvank.keys.toList()
+            ) { selectedRashi = it }
+
+            DropdownSelector(
+                label = "शहर चुनें",
+                items = DhruvankData.cityDhruvank.keys.toList()
+            ) { selectedCity = it }
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             Button(
                 onClick = {
-                    val sum = (DhruvankData.commodityDhruvank[selectedCommodity] ?: 0) +
-                              (DhruvankData.nakshatraDhruvank[selectedNakshatra] ?: 0) +
-                              (DhruvankData.tithiDhruvank[selectedTithi] ?: 0) +
-                              (DhruvankData.vaarDhruvank[selectedVaar] ?: 0) +
-                              (DhruvankData.cityDhruvank[selectedCity] ?: 0)
-                    
-                    val remainder = sum % 8
-                    val prediction = if (remainder % 2 == 0) "📈 तेजी (Teji)" else "📉 मंदी (Mandi)"
-                    
-                    resultText = "कुल योग: $sum\nशेष (Remainder): $remainder\n\nअनुमान: $prediction"
+                    val commodityVal = DhruvankData.commodityDhruvank[selectedCommodity] ?: 0
+                    val nakshatraVal = DhruvankData.nakshatraDhruvank[selectedNakshatra] ?: 0
+                    val tithiVal = DhruvankData.tithiDhruvank[selectedTithi] ?: 0
+                    val vaarVal = DhruvankData.vaarDhruvank[selectedVaar] ?: 0
+                    val rashiVal = DhruvankData.rashiDhruvank[selectedRashi] ?: 0
+                    val cityVal = DhruvankData.cityDhruvank[selectedCity] ?: 0
+
+                    val total = commodityVal + nakshatraVal + tithiVal + vaarVal + rashiVal + cityVal
+                    val remainder = total % 8
+
+                    val vaarLord = when (selectedVaar) {
+                        "रविवार" -> "सूर्य"
+                        "सोमवार" -> "चन्द्र"
+                        "मंगलवार" -> "मंगल"
+                        "बुधवार" -> "बुध"
+                        "गुरुवार" -> "गुरु"
+                        "शुक्रवार" -> "शुक्र"
+                        "शनिवार" -> "शनि"
+                        else -> "सूर्य"
+                    }
+
+                    val grahaSequence = listOf("सूर्य", "चन्द्र", "मंगल", "बुध", "गुरु", "शुक्र", "शनि", "राहु", "केतु")
+                    val startIndex = grahaSequence.indexOf(vaarLord)
+                    val resultIndex = (startIndex + remainder) % 9
+                    val resultGraha = grahaSequence[resultIndex]
+
+                    isTeji = resultGraha in DhruvankData.tejiGraha
+
+                    resultText = buildString {
+                        append("📊 गणना विवरण:\n\n")
+                        append("वस्तु ($selectedCommodity): $commodityVal\n")
+                        append("नक्षत्र ($selectedNakshatra): $nakshatraVal\n")
+                        append("तिथि ($selectedTithi): $tithiVal\n")
+                        append("वार ($selectedVaar): $vaarVal\n")
+                        append("राशि ($selectedRashi): $rashiVal\n")
+                        append("शहर ($selectedCity): $cityVal\n\n")
+                        append("कुल योग: $total\n")
+                        append("शेष (÷8): $remainder\n")
+                        append("फलित ग्रह: $resultGraha\n")
+                    }
+                    hasResult = true
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("गणना करें (Calculate)")
+                Text("गणना करें (Calculate)", style = MaterialTheme.typography.titleMedium)
             }
 
-            if (resultText.isNotEmpty()) {
+            if (hasResult) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-                ) {
-                    Text(
-                        text = resultText,
-                        modifier = Modifier.padding(16.dp),
-                        style = MaterialTheme.typography.bodyLarge
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (isTeji)
+                            MaterialTheme.colorScheme.primaryContainer
+                        else
+                            MaterialTheme.colorScheme.errorContainer
                     )
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = resultText,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = if (isTeji) "📈 अनुमान: तेजी (Teji)" else "📉 अनुमान: मंदी (Mandi)",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }
@@ -84,9 +164,13 @@ fun AnalysisScreen(navController: NavHostController) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DropdownSelector(label: String, items: List<String>, onSelect: (String) -> Unit) {
+fun DropdownSelector(
+    label: String,
+    items: List<String>,
+    onSelect: (String) -> Unit
+) {
     var expanded by remember { mutableStateOf(false) }
-    var selected by remember { mutableStateOf(items.first()) }
+    var selected by remember { mutableStateOf(items.firstOrNull() ?: "") }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -97,8 +181,12 @@ fun DropdownSelector(label: String, items: List<String>, onSelect: (String) -> U
             onValueChange = {},
             readOnly = true,
             label = { Text(label) },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier.menuAnchor().fillMaxWidth()
+            trailingIcon = {
+                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+            },
+            modifier = Modifier
+                .menuAnchor()
+                .fillMaxWidth()
         )
         ExposedDropdownMenu(
             expanded = expanded,
