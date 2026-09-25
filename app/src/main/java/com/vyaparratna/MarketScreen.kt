@@ -14,16 +14,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MarketScreen(navController: NavHostController) {
     val context = LocalContext.current
 
+    // Date & Auto Vaar
+    var selectedDate by remember { mutableStateOf(PanchangHelper.today()) }
+    var selectedVaar by remember { mutableStateOf(PanchangHelper.getVaarFromDate(selectedDate)) }
+    var showDatePicker by remember { mutableStateOf(false) }
+
     var selectedMarket by remember { mutableStateOf("Gold") }
     var selectedNakshatra by remember { mutableStateOf("अश्विनी") }
     var selectedTithi by remember { mutableStateOf("प्रतिपदा") }
-    var selectedVaar by remember { mutableStateOf("रविवार") }
     var selectedRashi by remember { mutableStateOf("मेष") }
     var selectedCity by remember { mutableStateOf("दिल्ली") }
     var priceInput by remember { mutableStateOf("") }
@@ -49,6 +54,56 @@ fun MarketScreen(navController: NavHostController) {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
 
+            // === DATE + AUTO VAAR ===
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                )
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text(
+                        "📅 ${PanchangHelper.formatDateHindi(selectedDate)}",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        "वार: $selectedVaar (auto)",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = {
+                                selectedDate = PanchangHelper.today()
+                                selectedVaar = PanchangHelper.getVaarFromDate(selectedDate)
+                            }
+                        ) {
+                            Text("आज", style = MaterialTheme.typography.bodyMedium)
+                        }
+                        Button(
+                            onClick = {
+                                selectedDate = PanchangHelper.tomorrow()
+                                selectedVaar = PanchangHelper.getVaarFromDate(selectedDate)
+                            }
+                        ) {
+                            Text("कल", style = MaterialTheme.typography.bodyMedium)
+                        }
+                        Button(
+                            onClick = {
+                                selectedDate = PanchangHelper.dayAfterTomorrow()
+                                selectedVaar = PanchangHelper.getVaarFromDate(selectedDate)
+                            }
+                        ) {
+                            Text("परसों", style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                }
+            }
+
             SectionTitle("📊 बाजार चुनें")
             ChipRow(
                 items = MarketData.marketDhruvank.keys.toList(),
@@ -70,7 +125,7 @@ fun MarketScreen(navController: NavHostController) {
                 onSelect = { selectedTithi = it }
             )
 
-            SectionTitle("📅 वार चुनें")
+            SectionTitle("📅 वार (Auto आया है)")
             ChipRow(
                 items = DhruvankData.vaarDhruvank.keys.toList(),
                 selected = selectedVaar,
@@ -138,7 +193,8 @@ fun MarketScreen(navController: NavHostController) {
                             "कृपया मूल्य डालें"
                         }
 
-                        resultText = "📊 विवरण:\n" +
+                        resultText = "📅 तारीख: ${PanchangHelper.formatDateHindi(selectedDate)}\n\n" +
+                                "📊 विवरण:\n" +
                                 "बाजार: $selectedMarket ($marketVal)\n" +
                                 "नक्षत्र: $selectedNakshatra ($nakshatraVal)\n" +
                                 "तिथि: $selectedTithi ($tithiVal)\n" +
@@ -148,7 +204,7 @@ fun MarketScreen(navController: NavHostController) {
                                 "कुल योग: $total\n" +
                                 "शेष (÷8): $remainder"
 
-                        // Save prediction to history
+                        // Save to history
                         PredictionStore.save(
                             context = context,
                             market = selectedMarket,
