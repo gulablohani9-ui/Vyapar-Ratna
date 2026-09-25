@@ -21,14 +21,12 @@ import java.util.Date
 fun MarketScreen(navController: NavHostController) {
     val context = LocalContext.current
 
-    // Date & Auto Vaar
     var selectedDate by remember { mutableStateOf(PanchangHelper.today()) }
     var selectedVaar by remember { mutableStateOf(PanchangHelper.getVaarFromDate(selectedDate)) }
-    var showDatePicker by remember { mutableStateOf(false) }
+    var selectedNakshatra by remember { mutableStateOf(PanchangHelper.getApproxNakshatra(selectedDate)) }
+    var selectedTithi by remember { mutableStateOf(PanchangHelper.getApproxTithi(selectedDate)) }
 
     var selectedMarket by remember { mutableStateOf("Gold") }
-    var selectedNakshatra by remember { mutableStateOf("अश्विनी") }
-    var selectedTithi by remember { mutableStateOf("प्रतिपदा") }
     var selectedRashi by remember { mutableStateOf("मेष") }
     var selectedCity by remember { mutableStateOf("दिल्ली") }
     var priceInput by remember { mutableStateOf("") }
@@ -37,6 +35,14 @@ fun MarketScreen(navController: NavHostController) {
     var predictedPrice by remember { mutableStateOf("") }
     var isTeji by remember { mutableStateOf(false) }
     var showResult by remember { mutableStateOf(false) }
+
+    // Auto-update nakshatra/tithi/vaar when date changes
+    fun updatePanchang(newDate: Date) {
+        selectedDate = newDate
+        selectedVaar = PanchangHelper.getVaarFromDate(newDate)
+        selectedNakshatra = PanchangHelper.getApproxNakshatra(newDate)
+        selectedTithi = PanchangHelper.getApproxTithi(newDate)
+    }
 
     Scaffold(
         topBar = {
@@ -54,7 +60,7 @@ fun MarketScreen(navController: NavHostController) {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
 
-            // === DATE + AUTO VAAR ===
+            // === DATE CARD ===
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
@@ -67,42 +73,37 @@ fun MarketScreen(navController: NavHostController) {
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        "वार: $selectedVaar (auto)",
+                        "वार: $selectedVaar  •  नक्षत्र: $selectedNakshatra",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        "तिथि: $selectedTithi",
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Button(
-                            onClick = {
-                                selectedDate = PanchangHelper.today()
-                                selectedVaar = PanchangHelper.getVaarFromDate(selectedDate)
-                            }
-                        ) {
+                        Button(onClick = { updatePanchang(PanchangHelper.today()) }) {
                             Text("आज", style = MaterialTheme.typography.bodyMedium)
                         }
-                        Button(
-                            onClick = {
-                                selectedDate = PanchangHelper.tomorrow()
-                                selectedVaar = PanchangHelper.getVaarFromDate(selectedDate)
-                            }
-                        ) {
+                        Button(onClick = { updatePanchang(PanchangHelper.tomorrow()) }) {
                             Text("कल", style = MaterialTheme.typography.bodyMedium)
                         }
-                        Button(
-                            onClick = {
-                                selectedDate = PanchangHelper.dayAfterTomorrow()
-                                selectedVaar = PanchangHelper.getVaarFromDate(selectedDate)
-                            }
-                        ) {
+                        Button(onClick = { updatePanchang(PanchangHelper.dayAfterTomorrow()) }) {
                             Text("परसों", style = MaterialTheme.typography.bodyMedium)
                         }
                     }
                 }
             }
+
+            Text(
+                "ℹ️ नक्षत्र और तिथि approximate हैं, आप manually बदल सकते हैं",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
 
             SectionTitle("📊 बाजार चुनें")
             ChipRow(
@@ -111,21 +112,21 @@ fun MarketScreen(navController: NavHostController) {
                 onSelect = { selectedMarket = it }
             )
 
-            SectionTitle("⭐ नक्षत्र चुनें")
+            SectionTitle("⭐ नक्षत्र (Auto)")
             ChipRow(
                 items = DhruvankData.nakshatraDhruvank.keys.toList(),
                 selected = selectedNakshatra,
                 onSelect = { selectedNakshatra = it }
             )
 
-            SectionTitle("🌙 तिथि चुनें")
+            SectionTitle("🌙 तिथि (Auto)")
             ChipRow(
                 items = DhruvankData.tithiDhruvank.keys.toList(),
                 selected = selectedTithi,
                 onSelect = { selectedTithi = it }
             )
 
-            SectionTitle("📅 वार (Auto आया है)")
+            SectionTitle("📅 वार (Auto)")
             ChipRow(
                 items = DhruvankData.vaarDhruvank.keys.toList(),
                 selected = selectedVaar,
@@ -204,7 +205,6 @@ fun MarketScreen(navController: NavHostController) {
                                 "कुल योग: $total\n" +
                                 "शेष (÷8): $remainder"
 
-                        // Save to history
                         PredictionStore.save(
                             context = context,
                             market = selectedMarket,
