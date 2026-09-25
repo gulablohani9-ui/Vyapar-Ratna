@@ -35,7 +35,8 @@ class MainActivity : ComponentActivity() {
 fun HomeScreen(navController: NavHostController) {
     val menuItems = listOf(
         "📊 तेजी-मंदी विश्लेषण" to "analysis",
-        "📖 ध्रुवांक सारिणी" to "dhruvank"
+        "📖 ध्रुवांक सारिणी" to "dhruvank",
+        "🕐 पूर्वानुमान इतिहास" to "history"
     )
 
     Scaffold(
