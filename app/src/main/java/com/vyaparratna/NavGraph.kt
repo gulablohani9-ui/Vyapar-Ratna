@@ -13,6 +13,7 @@ fun NavGraph(navController: NavHostController) {
     ) {
         composable("home") { HomeScreen(navController) }
         composable("dhruvank") { DhruvankScreen(navController) }
-        composable("analysis") { MarketScreen(navController) }  // MarketScreen use karo
+        composable("analysis") { MarketScreen(navController) }
+        composable("history") { HistoryScreen(navController) }
     }
 }
