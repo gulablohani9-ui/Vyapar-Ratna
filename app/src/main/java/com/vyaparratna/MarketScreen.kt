@@ -1,6 +1,5 @@
 package com.vyaparratna
 
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -10,6 +9,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -18,6 +18,8 @@ import androidx.navigation.NavHostController
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MarketScreen(navController: NavHostController) {
+    val context = LocalContext.current
+
     var selectedMarket by remember { mutableStateOf("Gold") }
     var selectedNakshatra by remember { mutableStateOf("अश्विनी") }
     var selectedTithi by remember { mutableStateOf("प्रतिपदा") }
@@ -145,6 +147,20 @@ fun MarketScreen(navController: NavHostController) {
                                 "शहर: $selectedCity ($cityVal)\n\n" +
                                 "कुल योग: $total\n" +
                                 "शेष (÷8): $remainder"
+
+                        // Save prediction to history
+                        PredictionStore.save(
+                            context = context,
+                            market = selectedMarket,
+                            nakshatra = selectedNakshatra,
+                            tithi = selectedTithi,
+                            vaar = selectedVaar,
+                            rashi = selectedRashi,
+                            city = selectedCity,
+                            price = priceInput,
+                            predicted = "%.2f".format(predicted),
+                            result = if (isTeji) "तेजी" else "मंदी"
+                        )
 
                         showResult = true
                     } catch (e: Throwable) {
