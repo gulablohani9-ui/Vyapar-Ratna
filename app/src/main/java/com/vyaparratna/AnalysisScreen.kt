@@ -1,10 +1,12 @@
 package com.vyaparratna
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -32,7 +34,7 @@ fun AnalysisScreen(navController: NavHostController) {
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
+                            Icons.Filled.ArrowBack,
                             contentDescription = "Back"
                         )
                     }
@@ -48,90 +50,100 @@ fun AnalysisScreen(navController: NavHostController) {
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(
-                "विवरण भरें",
-                style = MaterialTheme.typography.titleLarge
+            Text("विवरण भरें", style = MaterialTheme.typography.titleLarge)
+
+            SimpleDropdown(
+                label = "वस्तु चुनें",
+                items = DhruvankData.commodityDhruvank.keys.toList(),
+                onSelect = { selectedCommodity = it }
             )
 
-            DropdownSelector(
-                label = "वस्तु चुनें",
-                items = DhruvankData.commodityDhruvank.keys.toList()
-            ) { selectedCommodity = it }
-
-            DropdownSelector(
+            SimpleDropdown(
                 label = "नक्षत्र चुनें",
-                items = DhruvankData.nakshatraDhruvank.keys.toList()
-            ) { selectedNakshatra = it }
+                items = DhruvankData.nakshatraDhruvank.keys.toList(),
+                onSelect = { selectedNakshatra = it }
+            )
 
-            DropdownSelector(
+            SimpleDropdown(
                 label = "तिथि चुनें",
-                items = DhruvankData.tithiDhruvank.keys.toList()
-            ) { selectedTithi = it }
+                items = DhruvankData.tithiDhruvank.keys.toList(),
+                onSelect = { selectedTithi = it }
+            )
 
-            DropdownSelector(
+            SimpleDropdown(
                 label = "वार चुनें",
-                items = DhruvankData.vaarDhruvank.keys.toList()
-            ) { selectedVaar = it }
+                items = DhruvankData.vaarDhruvank.keys.toList(),
+                onSelect = { selectedVaar = it }
+            )
 
-            DropdownSelector(
+            SimpleDropdown(
                 label = "राशि चुनें",
-                items = DhruvankData.rashiDhruvank.keys.toList()
-            ) { selectedRashi = it }
+                items = DhruvankData.rashiDhruvank.keys.toList(),
+                onSelect = { selectedRashi = it }
+            )
 
-            DropdownSelector(
+            SimpleDropdown(
                 label = "शहर चुनें",
-                items = DhruvankData.cityDhruvank.keys.toList()
-            ) { selectedCity = it }
+                items = DhruvankData.cityDhruvank.keys.toList(),
+                onSelect = { selectedCity = it }
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Button(
                 onClick = {
-                    val commodityVal = DhruvankData.commodityDhruvank[selectedCommodity] ?: 0
-                    val nakshatraVal = DhruvankData.nakshatraDhruvank[selectedNakshatra] ?: 0
-                    val tithiVal = DhruvankData.tithiDhruvank[selectedTithi] ?: 0
-                    val vaarVal = DhruvankData.vaarDhruvank[selectedVaar] ?: 0
-                    val rashiVal = DhruvankData.rashiDhruvank[selectedRashi] ?: 0
-                    val cityVal = DhruvankData.cityDhruvank[selectedCity] ?: 0
+                    try {
+                        val commodityVal = DhruvankData.commodityDhruvank[selectedCommodity] ?: 0
+                        val nakshatraVal = DhruvankData.nakshatraDhruvank[selectedNakshatra] ?: 0
+                        val tithiVal = DhruvankData.tithiDhruvank[selectedTithi] ?: 0
+                        val vaarVal = DhruvankData.vaarDhruvank[selectedVaar] ?: 0
+                        val rashiVal = DhruvankData.rashiDhruvank[selectedRashi] ?: 0
+                        val cityVal = DhruvankData.cityDhruvank[selectedCity] ?: 0
 
-                    val total = commodityVal + nakshatraVal + tithiVal + vaarVal + rashiVal + cityVal
-                    val remainder = total % 8
+                        val total = commodityVal + nakshatraVal + tithiVal + vaarVal + rashiVal + cityVal
+                        val remainder = total % 8
 
-                    val vaarLord = when (selectedVaar) {
-                        "रविवार" -> "सूर्य"
-                        "सोमवार" -> "चन्द्र"
-                        "मंगलवार" -> "मंगल"
-                        "बुधवार" -> "बुध"
-                        "गुरुवार" -> "गुरु"
-                        "शुक्रवार" -> "शुक्र"
-                        "शनिवार" -> "शनि"
-                        else -> "सूर्य"
+                        val vaarLord = when (selectedVaar) {
+                            "रविवार" -> "सूर्य"
+                            "सोमवार" -> "चन्द्र"
+                            "मंगलवार" -> "मंगल"
+                            "बुधवार" -> "बुध"
+                            "गुरुवार" -> "गुरु"
+                            "शुक्रवार" -> "शुक्र"
+                            "शनिवार" -> "शनि"
+                            else -> "सूर्य"
+                        }
+
+                        val grahaSequence = listOf(
+                            "सूर्य", "चन्द्र", "मंगल", "बुध", "गुरु",
+                            "शुक्र", "शनि", "राहु", "केतु"
+                        )
+                        val startIndex = grahaSequence.indexOf(vaarLord)
+                        val resultIndex = (startIndex + remainder) % 9
+                        val resultGraha = grahaSequence[resultIndex]
+
+                        isTeji = resultGraha in DhruvankData.tejiGraha
+
+                        resultText = "📊 गणना विवरण:\n\n" +
+                                "वस्तु ($selectedCommodity): $commodityVal\n" +
+                                "नक्षत्र ($selectedNakshatra): $nakshatraVal\n" +
+                                "तिथि ($selectedTithi): $tithiVal\n" +
+                                "वार ($selectedVaar): $vaarVal\n" +
+                                "राशि ($selectedRashi): $rashiVal\n" +
+                                "शहर ($selectedCity): $cityVal\n\n" +
+                                "कुल योग: $total\n" +
+                                "शेष (÷8): $remainder\n" +
+                                "फलित ग्रह: $resultGraha"
+                        hasResult = true
+                    } catch (e: Exception) {
+                        resultText = "गणना में त्रुटि: ${e.message}"
+                        hasResult = true
+                        isTeji = false
                     }
-
-                    val grahaSequence = listOf("सूर्य", "चन्द्र", "मंगल", "बुध", "गुरु", "शुक्र", "शनि", "राहु", "केतु")
-                    val startIndex = grahaSequence.indexOf(vaarLord)
-                    val resultIndex = (startIndex + remainder) % 9
-                    val resultGraha = grahaSequence[resultIndex]
-
-                    isTeji = resultGraha in DhruvankData.tejiGraha
-
-                    resultText = buildString {
-                        append("📊 गणना विवरण:\n\n")
-                        append("वस्तु ($selectedCommodity): $commodityVal\n")
-                        append("नक्षत्र ($selectedNakshatra): $nakshatraVal\n")
-                        append("तिथि ($selectedTithi): $tithiVal\n")
-                        append("वार ($selectedVaar): $vaarVal\n")
-                        append("राशि ($selectedRashi): $rashiVal\n")
-                        append("शहर ($selectedCity): $cityVal\n\n")
-                        append("कुल योग: $total\n")
-                        append("शेष (÷8): $remainder\n")
-                        append("फलित ग्रह: $resultGraha\n")
-                    }
-                    hasResult = true
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("गणना करें (Calculate)", style = MaterialTheme.typography.titleMedium)
+                Text("गणना करें (Calculate)")
             }
 
             if (hasResult) {
@@ -151,7 +163,8 @@ fun AnalysisScreen(navController: NavHostController) {
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = if (isTeji) "📈 अनुमान: तेजी (Teji)" else "📉 अनुमान: मंदी (Mandi)",
+                            text = if (isTeji) "📈 अनुमान: तेजी (Teji)"
+                            else "📉 अनुमान: मंदी (Mandi)",
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold
                         )
@@ -162,9 +175,8 @@ fun AnalysisScreen(navController: NavHostController) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DropdownSelector(
+fun SimpleDropdown(
     label: String,
     items: List<String>,
     onSelect: (String) -> Unit
@@ -172,36 +184,49 @@ fun DropdownSelector(
     var expanded by remember { mutableStateOf(false) }
     var selected by remember { mutableStateOf(items.firstOrNull() ?: "") }
 
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = !expanded }
-    ) {
-        OutlinedTextField(
-            value = selected,
-            onValueChange = {},
-            readOnly = true,
-            label = { Text(label) },
-            trailingIcon = {
-                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-            },
-            modifier = Modifier
-                .menuAnchor()
-                .fillMaxWidth()
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier.padding(bottom = 4.dp)
         )
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
+        OutlinedButton(
+            onClick = { expanded = true },
+            modifier = Modifier.fillMaxWidth()
         ) {
-            items.forEach { item ->
-                DropdownMenuItem(
-                    text = { Text(item) },
-                    onClick = {
-                        selected = item
-                        onSelect(item)
-                        expanded = false
-                    }
-                )
-            }
+            Text(selected)
         }
+    }
+
+    if (expanded) {
+        AlertDialog(
+            onDismissRequest = { expanded = false },
+            title = { Text(label) },
+            text = {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 400.dp)
+                ) {
+                    items(items) { item ->
+                        TextButton(
+                            onClick = {
+                                selected = item
+                                onSelect(item)
+                                expanded = false
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(item)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { expanded = false }) {
+                    Text("बंद करें")
+                }
+            }
+        )
     }
 }
